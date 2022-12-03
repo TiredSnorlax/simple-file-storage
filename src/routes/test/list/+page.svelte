@@ -3,6 +3,7 @@
 	import axios from 'axios';
 	import { onMount } from 'svelte';
 	import type { IFile } from '$lib/types/index';
+	import type { ObjectId } from 'mongodb';
 
 	let files: IFile[] = [];
 
@@ -17,7 +18,7 @@
 			});
 	});
 
-	const deleteFile = async (id: string) => {
+	const deleteFile = async (id: string | ObjectId) => {
 		await axios.delete(domain + 'api/test/', { data: { id } });
 	};
 </script>

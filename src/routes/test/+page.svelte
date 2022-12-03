@@ -21,7 +21,8 @@
 
 		let data = {
 			buffer,
-			filename: file.name
+			filename: file.name,
+			path: ""
 		};
 
 		fetch(domain + 'api/test', {

@@ -1,3 +1,4 @@
+import type { IFolder, IDoc, IUser } from '$lib/types';
 import mongodb, { MongoClient } from 'mongodb';
 
 // if (!process.env.MONGODB_URI) {
@@ -29,9 +30,36 @@ if (process.env.NODE_ENV === 'development') {
 // separate module, the client can be shared across functions.
 export default clientPromise;
 
+export const setupDb = async () => {
+	client = await clientPromise;
+	const db = client.db('files');
+	return { db };
+};
+
 export const setupFiles = async () => {
 	client = await clientPromise;
 	const db = client.db('files');
 	const bucket = new mongodb.GridFSBucket(db, { bucketName: 'myCustomBucket' });
-	return { db, bucket }
+	return { db, bucket };
+};
+
+export const setupDocuments = async () => {
+	client = await clientPromise;
+	const db = client.db('files');
+	const docs = db.collection<IDoc>('documents');
+	return { docs };
+};
+
+export const setupFolders = async () => {
+	client = await clientPromise;
+	const db = client.db('files');
+	const folders = db.collection<IFolder>('folders');
+	return { folders };
+};
+
+export const setupUsers = async () => {
+	client = await clientPromise;
+	const db = client.db('files');
+	const users = db.collection<IUser>('users');
+	return { users };
 };
