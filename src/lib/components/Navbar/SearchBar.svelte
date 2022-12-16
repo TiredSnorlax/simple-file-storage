@@ -26,10 +26,7 @@
 
 	const checkSearch = (e: Event) => {
 		const ele = e.target as HTMLInputElement;
-		console.log(ele.value);
-
 		clearTimeout(searchTimeout);
-
 		searchTimeout = setTimeout(() => searchFunction(ele.value), 1000);
 	};
 
@@ -100,12 +97,6 @@
 		text-decoration: none;
 		color: initial;
 		width: 100%;
-	}
-
-	button {
-		background: none;
-		outline: none;
-		border: none;
 	}
 
 	.search {

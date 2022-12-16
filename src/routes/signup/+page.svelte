@@ -1,18 +1,14 @@
 <script lang="ts">
 	import InputField from '$lib/components/InputField.svelte';
+	import { errorMessage, message } from '$lib/stores';
 	import { domain } from '$lib/utils';
 	import axios from 'axios';
-	import { onDestroy } from 'svelte';
-	import { fly } from 'svelte/transition';
 
 	let username = '';
 	let password = '';
 	let repeatPassword = '';
 
 	let usernameTimeout: ReturnType<typeof setTimeout>;
-
-	let errorMsg: string | null = null;
-	let message: string | null = null;
 
 	const validArray = [false, false, false];
 
@@ -30,10 +26,10 @@
 		await axios.post(domain + 'api/signup/check', { username }).then((res) => {
 			console.log(res.data);
 			const exists = res.data;
-			if (exists) errorMsg = 'Username already exists';
+			if (exists) errorMessage.set('Username already exists');
 			else {
 				validArray[0] = true;
-				errorMsg = null;
+				errorMessage.set(null);
 			}
 		});
 	};
@@ -53,21 +49,21 @@
 	const signup = async () => {
 		console.log(username, password);
 		validArray.forEach((valid, i) => {
-			if (!valid) errorMsg = `Field ${i} is wrong`;
+			if (!valid) errorMessage.set(`Field ${i} is wrong`);
 		});
-		if (errorMsg) return;
+		if ($errorMessage) return;
 		await axios
 			.post(domain + 'api/signup', { username, password })
 			.then((res) => {
 				console.log(res.data);
-				message = 'User created successfully!';
+				message.set('User created successfully!');
 				username = '';
 				password = '';
 				repeatPassword = '';
 			})
 			.catch((err) => {
 				console.log(err);
-				errorMsg = err.response.data.message;
+				errorMessage.set(err.response.data.message);
 			});
 	};
 </script>
@@ -96,16 +92,6 @@
 		<p class="login">Have an account already? Login <a href="./login">here</a></p>
 		<button on:click={signup}>Signup</button>
 	</div>
-	{#if errorMsg}
-		<button class="errorMsg" transition:fly={{ y: -30 }} on:click={() => (errorMsg = null)}>
-			{errorMsg}
-		</button>
-	{/if}
-	{#if message}
-		<button class="message" transition:fly={{ y: -30 }} on:click={() => (message = null)}>
-			{message}
-		</button>
-	{/if}
 </div>
 
 <style>
@@ -158,44 +144,6 @@
 
 		border-radius: 1rem;
 		padding: 2rem;
-	}
-
-	.errorMsg {
-		position: fixed;
-		top: 1rem;
-		left: 0;
-		right: 0;
-		margin: 0 auto;
-		padding: 0.5rem 1rem;
-		background: red;
-		border-radius: 0.5rem;
-
-		font-size: 1.1rem;
-
-		width: fit-content;
-	}
-
-	.message {
-		position: fixed;
-		top: 1rem;
-		left: 0;
-		right: 0;
-		margin: 0 auto;
-		padding: 0.5rem 1rem;
-		background: green;
-		border-radius: 0.5rem;
-
-		font-size: 1.1rem;
-
-		width: fit-content;
-	}
-
-	.errorMsg:hover {
-		background: rgb(255, 160, 160);
-	}
-
-	.message:hover {
-		background: rgb(160, 255, 160);
 	}
 
 	.passwordNote {

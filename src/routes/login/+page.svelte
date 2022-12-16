@@ -1,12 +1,31 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import InputField from '$lib/components/InputField.svelte';
+	import { errorMessage, message, user } from '$lib/stores';
+	import { domain } from '$lib/utils';
+	import axios from 'axios';
 
-	let username = "";
-	let password = "";
+	let username = '';
+	let password = '';
 
 	const login = async () => {
 		console.log('username: ' + username);
 		console.log('password: ' + password);
+
+		if (!username || !password) return;
+
+		await axios
+			.post(domain + 'api/login', { username, password })
+			.then((res) => {
+				message.set(res.data.message);
+				console.log(res.data);
+				user.set(res.data.found);
+				goto('./me');
+			})
+			.catch((err) => {
+				console.log(err.response.data.message);
+				errorMessage.set(err.response.data.message);
+			});
 	};
 </script>
 
@@ -26,7 +45,7 @@
 	}
 
 	.signup {
-        margin-top: 1rem;
+		margin-top: 1rem;
 		font-size: 0.9rem;
 	}
 

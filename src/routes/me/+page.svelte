@@ -3,9 +3,11 @@
 	import DocsList from '$lib/components/document/DocsList.svelte';
 	import { path, resetCurrentFolder } from '$lib/stores';
 	import { user } from '$lib/stores';
-	import type { IDoc } from '$lib/types';
+	import type { PageData } from './$types';
 
-	// $: docs = $user?.mainFolder! ?? [];
+	export let data: PageData;
+
+	let docs = data.files;
 
 	onMount(() => {
 		path.set('/');
@@ -18,7 +20,7 @@
 		<div class="info">
 			<h2>{$user.username}'s folder</h2>
 		</div>
-		<DocsList bind:docs={$user.mainFolder} />
+		<DocsList bind:docs />
 	{/if}
 </div>
 

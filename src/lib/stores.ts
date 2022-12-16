@@ -10,3 +10,7 @@ export const currentFolder = writable<IFolderFilled>({ _id: '', foldername: '', 
 export const resetCurrentFolder = () => {
 	currentFolder.set({ _id: '', foldername: 'main', children: [] });
 };
+
+export const message = writable<string | null>(null);
+
+export const errorMessage = writable<string | null>(null);
