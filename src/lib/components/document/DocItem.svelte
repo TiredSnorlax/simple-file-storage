@@ -1,49 +1,69 @@
 <script lang="ts">
 	import type { IDoc } from '$lib/types';
 	import { domain } from '$lib/utils';
+	import { Buffer } from 'buffer';
 	import { slide } from 'svelte/transition';
-	import DocDeleteMenu from './DocDeleteMenu.svelte';
 
 	import DocDetailsMenu from './DocDetailsMenu.svelte';
 	import DocIcon from './DocIcon.svelte';
 	import DocRenameMenu from './DocRenameMenu.svelte';
 
 	export let doc: IDoc;
+	export let format: number;
+	export let setToDelete: (doc: IDoc) => void;
 
 	let open = false;
 
-	// * Just a visual effect for item disappearing after delete
-	let hide = false;
-
 	let renameMenuOpen = false;
 	let detailsMenuOpen = false;
-	let deleteMenuOpen = false;
+
+	let canvasEle: HTMLCanvasElement;
+
+	const loadPreview = async (format: number) => {
+		if (!doc || doc.type === 'folder') return;
+		if (format !== 0) return;
+		const chunks = [];
+		const response = await fetch(domain + 'api/file/' + doc.childId + '/preview');
+		const reader = response.body?.getReader();
+		while (true) {
+			const { value, done } = await reader!.read();
+			if (done) break;
+			chunks.push(value);
+		}
+
+		const buffer = Buffer.concat(chunks);
+
+		if (buffer.length === 0) return;
+
+		canvasEle
+			.getContext('2d')
+			?.putImageData(new ImageData(new Uint8ClampedArray(buffer), 300), 0, 0);
+	};
+
+	$: loadPreview(format);
 </script>
 
-{#if !hide}
-	<div class="item">
+<div class="item" class:listItem={format === 1}>
+	{#if format === 0 && doc.fileType !== 'folder'}
+		<canvas bind:this={canvasEle} />
+	{/if}
+	<div>
 		<a href={`${domain}${doc.type}/${doc.childId}`} class="info">
-			<!-- {#if doc.type === 'file'}
-				<span class="material-icons-outlined"> insert_drive_file </span>
-			{:else}
-				<span class="material-icons-outlined"> folder </span>
-			{/if} -->
 			<DocIcon fileType={doc.fileType} />
 			<p>{doc.name}</p>
 		</a>
 		<button on:click={() => (open = !open)}
 			><span class="material-icons-outlined"> more_vert </span></button
 		>
-
 		{#if open}
 			<div class="popup" transition:slide>
-				<button on:click={() => (deleteMenuOpen = true)}>Delete</button>
+				<button on:click={() => setToDelete(doc)}>Delete</button>
 				<button on:click={() => (detailsMenuOpen = true)}>Details</button>
 				<button on:click={() => (renameMenuOpen = true)}>Rename</button>
 			</div>
 		{/if}
 	</div>
-{/if}
+</div>
 
 {#if renameMenuOpen}
 	<DocRenameMenu {doc} bind:renameMenuOpen />
@@ -53,16 +73,20 @@
 	<DocDetailsMenu {doc} bind:detailsMenuOpen />
 {/if}
 
-{#if deleteMenuOpen}
-	<DocDeleteMenu {doc} bind:deleteMenuOpen bind:hide />
-{/if}
-
 <style>
 	a {
 		color: initial;
 		text-decoration: none;
 		display: block;
 		min-width: 0;
+	}
+
+	canvas {
+		width: 100%;
+		object-fit: contain;
+
+		border-top-left-radius: 0.5rem;
+		border-top-right-radius: 0.5rem;
 	}
 
 	button {
@@ -76,15 +100,37 @@
 	.item {
 		border: 1px solid grey;
 		border-radius: 0.5rem;
-		padding: 0.5rem;
 
-		/* flex: 1 1 230px;
-		max-width: 300px; */
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5rem;
+
+		position: relative;
+	}
+
+	.item.listItem {
+		border: none;
+		border-top: 1px solid grey;
+		border-radius: 0;
 		width: 100%;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		gap: 0.5rem;
+
+		position: relative;
+	}
+
+	.item > div {
+		width: 100%;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem;
 
 		position: relative;
 	}

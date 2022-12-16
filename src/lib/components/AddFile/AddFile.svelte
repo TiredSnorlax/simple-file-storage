@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { domain } from '$lib/utils';
 	import axios from 'axios';
-	import { Buffer } from 'buffer';
 	import { currentFolder, path, user } from '$lib/stores';
 	import { slide } from 'svelte/transition';
-	import NewFolderMenu from './me/NewFolderMenu.svelte';
-	import ProgressBar from './me/ProgressBar.svelte';
+	import NewFolderMenu from './NewFolderMenu.svelte';
+	import ProgressBar from './ProgressBar.svelte';
 	import type { IDoc } from '$lib/types';
+	import NewFile from './NewFile.svelte';
 
 	export let docs: IDoc[];
 
-	let selectedFiles: FileList;
 	let newFoldername = '';
 
 	let open = false;
 	let folderMenuOpen = false;
+	let fileMenuOpen = false;
 
 	let uploading = false;
 	let progress = 0;
@@ -42,59 +42,6 @@
 				console.log(err);
 			});
 	};
-
-	const addFile = async () => {
-		uploading = true;
-		if (selectedFiles.length === 0) return;
-		const file = selectedFiles[0];
-		const fileSize = file.size;
-
-		const stream = file.stream();
-		const reader = stream.getReader();
-
-		let result: Uint8Array = new Uint8Array();
-
-		let charsReceived = 0;
-		reader.read().then(function processFile({ done, value }): any {
-			if (done) {
-				console.log('finished preparing');
-				const buffer = Buffer.from(result);
-				let data = {
-					buffer,
-					filename: file.name,
-					userId: $user!._id,
-					path: $path,
-					folderId: $currentFolder._id
-				};
-
-				axios
-					.post(domain + 'api/file', data)
-					.then((res) => {
-						console.log(res.data);
-						docs = res.data;
-						uploadDone = true;
-					})
-					.catch((err) => console.log(err));
-
-				return;
-			}
-			charsReceived += value.length;
-
-			const temp = result;
-			result = new Uint8Array(temp.length + value.length);
-			result.set(temp);
-			result.set(value, temp.length);
-
-			console.log(`Received ${Math.floor((charsReceived / fileSize) * 100)}%. `);
-			progress = Math.floor((charsReceived / fileSize) * 100);
-			return reader.read().then(processFile);
-		});
-	};
-
-	const checkFile = () => {
-		console.log(selectedFiles);
-		if (selectedFiles.length > 0) addFile();
-	};
 </script>
 
 {#if open}
@@ -108,10 +55,9 @@
 					<span class="material-icons-outlined"> folder</span>
 					Add Folder</button
 				>
-				<input bind:files={selectedFiles} on:change={checkFile} type="file" id="upload" hidden />
-				<label class="field" for="upload">
-					<span class="material-icons-outlined">file_upload</span>
-					Add File</label
+				<button class="field" on:click={() => (fileMenuOpen = true)}>
+					<span class="material-icons-outlined"> file_upload</span>
+					Add File</button
 				>
 				<button class="closeBtn" on:click={() => (open = false)}>Close</button>
 			</div>
@@ -122,7 +68,9 @@
 	<span class="material-icons-outlined"> add </span>
 	Add</button
 >
-
+{#if fileMenuOpen}
+	<NewFile bind:fileMenuOpen bind:progress bind:uploadDone bind:uploading bind:docs />
+{/if}
 <NewFolderMenu {folderMenuOpen} bind:newFoldername {addFolder} />
 
 <style>

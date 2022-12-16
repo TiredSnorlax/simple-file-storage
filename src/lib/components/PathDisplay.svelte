@@ -3,7 +3,7 @@
 	import { domain } from '$lib/utils';
 	import axios from 'axios';
 	import type { ObjectId } from 'mongodb';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy} from 'svelte';
 	import { path } from '$lib/stores';
 
 	export let current: string | ObjectId = '';
@@ -79,6 +79,7 @@
 		justify-content: flex-start;
 		align-items: center;
 		gap: 1rem;
+		padding-left: 1rem;
 	}
 
 	.pathDisplay {

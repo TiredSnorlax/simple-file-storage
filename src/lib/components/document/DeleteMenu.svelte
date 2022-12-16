@@ -4,52 +4,59 @@
 	import { user, path } from '$lib/stores';
 	import { domain } from '$lib/utils';
 
-	export let doc: IDoc;
-	export let deleteMenuOpen: boolean;
-
-	export let hide: boolean;
+	export let docs: IDoc[];
+	export let toDelete: IDoc | null;
 
 	let result: string | null = null;
 
 	const deleteFile = async () => {
+		if (!toDelete) return;
+		console.log(toDelete);
 		await axios
-			.delete(`${domain}api/${doc.type}/${doc.childId}`, {
-				data: { path: $path, userId: $user?._id, type: doc.type }
+			.delete(`${domain}api/${toDelete.type}/${toDelete.childId}`, {
+				data: { path: $path, userId: $user?._id, type: toDelete.type }
 			})
 			.then((res) => {
 				console.log(res.data);
+				docs = res.data.folder;
 				result = 'success';
-				hide = true;
 			})
 			.catch((err) => {
 				console.log(err.response.data);
 				result = 'error';
 			});
 	};
+
+	const close = () => {
+		toDelete = null;
+		result = null;
+	};
 </script>
 
-<div class="bg">
-	<div class="menu">
-		{#if result === null}
-			<h3>Delete {doc.name}?</h3>
-			{#if doc.type === 'folder'}
-				<p>Note: All data stored in this folder will be deleted as well</p>
-			{/if}
+{#if toDelete}
+	<div class="bg">
+		<div class="menu">
+			{#if result === null}
+				<h3>Delete {toDelete.name}?</h3>
+				{#if toDelete.type === 'folder'}
+					<p>Note: All data stored in this folder will be deleted as well</p>
+				{/if}
 
-			<p>This action is irreversible!</p>
-			<div class="btnContainer">
-				<button on:click={() => (deleteMenuOpen = false)}>Cancel</button>
-				<button on:click={deleteFile}>Delete</button>
-			</div>
-		{:else if result === 'success'}
-			<p>Delete success!</p>
-			<button on:click={() => (deleteMenuOpen = false)}>Close</button>
-		{:else if result === 'error'}
-			<p>Something went wrong... Try again later.</p>
-			<button on:click={() => (deleteMenuOpen = false)}>Close</button>
-		{/if}
+				<p>This action is irreversible!</p>
+				<div class="btnContainer">
+					<button on:click={close}>Cancel</button>
+					<button on:click={deleteFile}>Delete</button>
+				</div>
+			{:else if result === 'success'}
+				<p>Delete success!</p>
+				<button on:click={close}>Close</button>
+			{:else if result === 'error'}
+				<p>Something went wrong... Try again later.</p>
+				<button on:click={close}>Close</button>
+			{/if}
+		</div>
 	</div>
-</div>
+{/if}
 
 <style>
 	button {

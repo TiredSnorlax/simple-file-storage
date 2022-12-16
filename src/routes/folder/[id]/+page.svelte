@@ -2,14 +2,14 @@
 	import { page } from '$app/stores';
 	import axios from 'axios';
 	import { domain } from '$lib/utils';
-	import type { IDoc, IFolder } from '$lib/types';
+	import type { IDoc, IFolder, IFolderFilled } from '$lib/types';
 	import DocsList from '$lib/components/document/DocsList.svelte';
 	import { currentFolder, path } from '$lib/stores';
 	import PathDisplay from '$lib/components/PathDisplay.svelte';
 
 	$: id = $page.params.id;
 	let doc: IDoc;
-	let folder: IFolder;
+	let folder: IFolderFilled;
 
 	const getFolder = async () => {
 		await axios
@@ -55,7 +55,7 @@
 
 <style>
 	.container {
-		padding: 1rem;
+		padding: 1rem 0;
 		width: 100%;
 		height: 100%;
 		position: relative;

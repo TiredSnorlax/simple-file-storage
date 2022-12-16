@@ -1,5 +1,5 @@
 import { setupDb } from '$lib/database/db';
-import { createNewDoc } from '$lib/database/helper';
+import { createNewDoc, getDocsFromId } from '$lib/database/helper';
 import type { IDoc, IFolder, IUser } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import { ObjectId } from 'mongodb';
@@ -31,22 +31,26 @@ export const POST: RequestHandler = async ({ request }) => {
 			path
 		);
 
+		if (!newDoc) throw error(400, 'No new doc');
+
 		if (path === '/') {
 			const updated = await users.findOneAndUpdate(
 				{ _id: new ObjectId(userId) },
-				{ $push: { mainFolder: newDoc } },
+				{ $push: { mainFolder: newDoc._id } },
 				{ returnDocument: 'after' }
 			);
-			return new Response(JSON.stringify(updated.value?.mainFolder));
+			const result = await getDocsFromId(updated.value?.mainFolder, documents);
+			return new Response(JSON.stringify(result));
 		} else {
 			if (folderId === '') throw error(400, 'No folderId');
 			const folders = db.collection<IFolder>('folders');
 			const updated = await folders.findOneAndUpdate(
 				{ _id: new ObjectId(folderId) },
-				{ $push: { children: newDoc } },
+				{ $push: { children: newDoc._id } },
 				{ returnDocument: 'after' }
 			);
-			return new Response(JSON.stringify(updated.value?.children));
+			const result = await getDocsFromId(updated.value?.children, documents);
+			return new Response(JSON.stringify(result));
 		}
 	} catch (err) {
 		console.log(err);

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { IDoc, IFile } from '$lib/types';
 	import { domain } from '$lib/utils';
+	import { getFileSize } from '$lib/utils/files';
 	import axios from 'axios';
 	import { onMount } from 'svelte';
 
@@ -36,7 +37,7 @@
 			</div>
 			<div>
 				<p>Size:</p>
-				<p>{fileDetails.length} bytes</p>
+				<p>{getFileSize(fileDetails.length)}</p>
 			</div>
 			<div>
 				<p>File type:</p>
@@ -50,7 +51,7 @@
 			</div>
 			<div>
 				<p>Total Size:</p>
-				<p>{folderDetails.totalSize} bytes</p>
+				<p>{getFileSize(folderDetails.totalSize)}</p>
 			</div>
 			<div>
 				<p>Children:</p>

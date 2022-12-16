@@ -4,13 +4,16 @@
 	import { imgTypes, vidTypes, pdfTypes } from '$lib/utils/files/index';
 	import axios from 'axios';
 	import { slide } from 'svelte/transition';
-	import DocIcon from './document/DocIcon.svelte';
+	import DocIcon from '../document/DocIcon.svelte';
+	import FilterMenu from './FilterMenu.svelte';
 
 	let inputFocused = false;
 
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
+	// * starts off with all selected
 	let filter = ['folder', ...imgTypes, ...vidTypes, ...pdfTypes];
+	let filterMenuOpen = false;
 
 	let results: IDoc[];
 	let searchTerm: string;
@@ -25,13 +28,13 @@
 		const ele = e.target as HTMLInputElement;
 		console.log(ele.value);
 
-		if (ele.value.length === 0) return;
 		clearTimeout(searchTimeout);
 
 		searchTimeout = setTimeout(() => searchFunction(ele.value), 1000);
 	};
 
 	const searchFunction = async (term: string) => {
+		if (term.length === 0) return;
 		console.log('search');
 		searchTerm = term;
 
@@ -44,69 +47,48 @@
 			.catch((err) => console.log(err));
 	};
 
-	// const highlightResults = (results: IDoc[], term: string) => {
-	// 	const resultsElement = document.querySelector('#results') as HTMLDivElement;
-	// 	if (!resultsElement) return;
-	// 	resultsElement.innerHTML = '';
-	// 	for (const doc of results) {
-	// 		const str = doc.name
-	// 			.replace(term, `/${term}/`)
-	// 			.split('/')
-	// 			.filter((s) => s !== '');
-	// 		console.log(str);
-	// 		createResultItem(resultsElement, term, str, doc.type);
-	// 	}
-	// };
-
-	// const createResultItem = (
-	// 	container: HTMLDivElement,
-	// 	term: string,
-	// 	arr: string[],
-	// 	type: string
-	// ) => {
-	// 	const item = document.createElement('div');
-	// 	const nameContainer = document.createElement('div');
-	// 	for (const str of arr) {
-	// 		const ele = document.createElement('span');
-	// 		if (type === 'file')
-	// 			item.innerHTML = '<span class="material-icons-outlined"> insert_drive_file </span>';
-	// 		else if (type === 'folder')
-	// 			item.innerHTML = '<span class="material-icons-outlined"> folder </span>';
-	// 		ele.innerText = str;
-	// 		if (str === term) {
-	// 			ele.style.fontWeight = 'bold';
-	// 		}
-	// 		nameContainer.appendChild(ele);
-	// 	}
-	// 	item.appendChild(nameContainer);
-	// 	container.appendChild(item);
-	// };
+	const pressedEnter = (event: KeyboardEvent) => {
+		if (event.key === 'Enter') {
+			const ele = event.target as HTMLInputElement;
+			searchFunction(ele.value);
+		}
+	};
 </script>
 
 <svelte:window on:click={hasFocus} />
 
 <div class="search" class:inputFocused>
 	<span class="material-icons-outlined"> search </span>
-	<input type="text" placeholder="Search drive" on:keyup={checkSearch} />
-	<span class="material-icons-outlined"> tune </span>
-	{#if results && results.length > 0 && inputFocused}
-		<div class="results" id="results" transition:slide>
-			{#each results as doc, i}
-				<a href={`${domain}${doc.type}/${doc.childId}`}>
-					<div>
-						<DocIcon fileType={doc.fileType} />
+	<input type="text" placeholder="Search drive" on:keyup={checkSearch} on:keydown={pressedEnter} />
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<span class="material-icons-outlined" on:click={() => (filterMenuOpen = !filterMenuOpen)}>
+		tune
+	</span>
+	<FilterMenu bind:filter bind:filterMenuOpen />
+	{#if inputFocused}
+		{#if results && results.length > 0}
+			<div class="results" id="results" transition:slide>
+				{#each results as doc, i}
+					<a href={`${domain}${doc.type}/${doc.childId}`}>
 						<div>
-							{#each doc.name
-								.replace(searchTerm, `/${searchTerm}/`)
-								.split('/')
-								.filter((s) => s !== '') as str}
-								<span class:bolded={str === searchTerm}>{str}</span>
-							{/each}
+							<DocIcon fileType={doc.fileType} />
+							<div>
+								{#each doc.name
+									.replace(searchTerm, `/${searchTerm}/`)
+									.split('/')
+									.filter((s) => s !== '') as str}
+									<span class:bolded={str === searchTerm}>{str}</span>
+								{/each}
+							</div>
 						</div>
-					</div>
-				</a>
-			{/each}
-		</div>
+					</a>
+				{/each}
+			</div>
+		{:else if results && results.length === 0}
+			<div class="results">
+				<p>No such file/folder</p>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -118,6 +100,12 @@
 		text-decoration: none;
 		color: initial;
 		width: 100%;
+	}
+
+	button {
+		background: none;
+		outline: none;
+		border: none;
 	}
 
 	.search {

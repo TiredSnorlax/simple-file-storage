@@ -1,12 +1,14 @@
-<script>
-	import AddFile from '$lib/components/AddFile.svelte';
-	import NavBar from '$lib/components/NavBar.svelte';
+<script lang="ts">
+	import NavBar from '$lib/components/Navbar/NavBar.svelte';
 	import { onMount } from 'svelte';
 	import { user } from '$lib/stores';
 	import axios from 'axios';
 	import { domain } from '$lib/utils';
+	import { page } from '$app/stores';
 
 	const userId = '6380b4ab7b233f99f3a405a3';
+
+	const excluded = ['/login', '/logout', '/signup'];
 
 	const getFiles = async () => {
 		console.log('getting user');
@@ -15,13 +17,23 @@
 		});
 	};
 
+	const checkShow = (_id: string) => {
+		const id = $page.route.id;
+		if (!id) return false;
+		return !excluded.includes(id);
+	};
+
 	onMount(async () => {
 		await getFiles();
 	});
+
+	$: show = checkShow($page.params.id);
 </script>
 
 <div class="container">
-	<NavBar />
+	{#if show}
+		<NavBar />
+	{/if}
 	<div class="slot">
 		<slot />
 	</div>

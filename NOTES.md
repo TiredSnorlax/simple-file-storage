@@ -35,16 +35,17 @@
 4. Fix deleting folder (ensure that its children are deleted too) [x]
    - Use recursion?
 5. Fix renaming folder [x]
-   - Change pathing to objectid instead of name
+   - Change pathing to objectid instead of name [x]
 6. Add preview images (https://www.npmjs.com/package/sharp) [ ]
 7. Implement permissions + public/private. [ ]
    - Info stored in Document
 8. Implement searchbar [x]
-9. Add filters to searchbar [ ]
+9. Add filters to searchbar [x]
    - filter by fileType (pdf, images, video)
-10. Fix file page [ ]
-11. Implement login and signup
-12. Make profile page
+10. Fix file page [x]
+11. Implement login and signup [ ]
+12. Make profile page [ ]
+13. Implement zooming in for files [ ]
 
 ## Fonts
 

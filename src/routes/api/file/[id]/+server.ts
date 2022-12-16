@@ -39,10 +39,10 @@ export const DELETE: RequestHandler = async ({ request, params }) => {
 	// await bucket.delete(new ObjectId(id));
 
 	try {
-		await deleteFile(db, bucket, userId, path, id);
-
-		return new Response('File: ' + id + ' deleted');
+		const updatedFolder = await deleteFile(db, bucket, userId, path, id);
+		return new Response(JSON.stringify({ folder: updatedFolder }));
 	} catch (err) {
+		console.log(err);
 		throw error(400, 'Something went wrong while deleting');
 	}
 };
