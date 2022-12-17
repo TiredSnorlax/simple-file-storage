@@ -11,6 +11,8 @@
 
 	const excluded = ['/login', '/logout', '/signup'];
 
+	$: pageId = $page.route.id;
+
 	const getFiles = async () => {
 		console.log('getting user');
 		await axios.post(domain + 'api/me', { userId }).then((res) => {
@@ -19,13 +21,12 @@
 	};
 
 	const checkShow = (_id: string) => {
-		const id = $page.route.id;
-		if (!id) return false;
-		return !excluded.includes(id);
+		if (!pageId) return false;
+		return !excluded.includes(pageId);
 	};
 
 	onMount(async () => {
-		await getFiles();
+		if (pageId && !excluded.includes(pageId)) await getFiles();
 	});
 
 	$: show = checkShow($page.params.id);

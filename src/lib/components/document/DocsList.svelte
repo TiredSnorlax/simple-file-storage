@@ -6,6 +6,7 @@
 	import DeleteMenu from './DeleteMenu.svelte';
 
 	export let docs: IDoc[];
+	export let userPermission: string;
 
 	let files: IDoc[] = [];
 	let folders: IDoc[] = [];
@@ -60,7 +61,7 @@
 			</p>
 			<div class="items" class:list={format === 1}>
 				{#each files as doc, i}
-					<DocItem {doc} {format} { setToDelete} />
+					<DocItem {doc} {format} {setToDelete} />
 				{/each}
 			</div>
 		</div>
@@ -70,8 +71,10 @@
 		<p>No files in this folder</p>
 	</div>
 {/if}
-<AddFile bind:docs />
-<DeleteMenu bind:toDelete bind:docs />
+{#if userPermission === 'owner' || userPermission === 'edit'}
+	<AddFile bind:docs />
+	<DeleteMenu bind:toDelete bind:docs />
+{/if}
 <FolderSlideshow {files} bind:slideshowOpen />
 
 <style>

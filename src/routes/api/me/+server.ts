@@ -8,6 +8,8 @@ export const POST: RequestHandler = async ({ cookies }) => {
 
 	const userId = cookies.get('session');
 
+	if (!userId) throw error(403, 'Not logged in!');
+
 	const users = db.collection('users');
 
 	try {

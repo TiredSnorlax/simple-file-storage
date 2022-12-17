@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const newFileId = uploadStream.id;
 
 		const user = await users.findOne<IUser>({ _id: new ObjectId(userId) });
-		if (!user) throw error(403, 'No user found');
+		if (!user || !user._id) throw error(403, 'No user found');
 
 		const newDoc = await createNewDoc(documents, user._id, 'file', filename, newFileId, path);
 		if (!newDoc) throw error(400, 'No new doc');

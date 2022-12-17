@@ -3,6 +3,7 @@
 ## Models
 
 1. Document -> Is the reference point to access files and folders
+   - Can be public or private. Public means everyone can view, but they cannot edit.
 2. Files -> Current supported types: Images, Videos, PDFs
 3. Folders -> Has a child array that contains Document objects
 
@@ -43,9 +44,11 @@
 9. Add filters to searchbar [x]
    - filter by fileType (pdf, images, video)
 10. Fix file page [x]
-11. Implement login and signup [ ]
+11. Implement login and signup [x]
 12. Make profile page [ ]
 13. Implement zooming in for files [ ]
+14. Fix file adding UI
+15. Add email to User
 
 ## Fonts
 

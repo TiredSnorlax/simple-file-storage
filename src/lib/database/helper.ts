@@ -1,8 +1,8 @@
 import { updated } from '$app/stores';
-import type { ID, IDoc, IFolder } from '$lib/types';
+import type { ID, IDoc, IFolder, IUser } from '$lib/types';
 import { error } from '@sveltejs/kit';
-import { Db, GridFSBucket, ObjectId, type Collection } from 'mongodb';
-import { setupUsers } from './db';
+import { Db, GridFSBucket, ObjectId, type Collection, type WithId } from 'mongodb';
+import { setupDocuments, setupUsers } from './db';
 
 export const getDocsFromId = async (ids: ID[] | undefined, documents: Collection<IDoc>) => {
 	if (!ids) return [];
@@ -23,9 +23,12 @@ export const createNewDoc = async (
 	if (type === 'file') fileType = name.split('.').pop()?.toLowerCase();
 	else if (type === 'folder') fileType = 'folder';
 
+	// TODO add permissions from parent folder if any
 	if (!fileType) return;
 	const temp: IDoc = {
 		user: userId,
+		permissions: [],
+		public: false,
 		type,
 		fileType,
 		path,
@@ -90,34 +93,6 @@ export const renameDoc = async (
 	path: string,
 	newName: string
 ) => {
-	// if (path === '/') {
-	// 	const { users } = await setupUsers();
-	// 	const userFilter = { _id: new ObjectId(userId) };
-	// 	const user = await users.findOne(userFilter);
-
-	// 	if (!user) throw error(400, 'no such user');
-	// 	console.log(id);
-	// 	console.log(user.mainFolder);
-	// 	const index = user.mainFolder.findIndex((doc) => doc.childId.toString() === id);
-	// 	if (index < 0) throw error(400, 'doc not in folder');
-	// 	const _temp = [...user.mainFolder];
-	// 	console.log(_temp, index);
-	// 	_temp[index].name = newName;
-	// 	console.log(_temp);
-
-	// 	users.updateOne(userFilter, { $set: { mainFolder: _temp } });
-	// } else {
-	// 	const folderFilter = { children: { $elemMatch: { childId: new ObjectId(id) } } };
-	// 	const folder = await folders.findOne(folderFilter);
-	// 	if (!folder) throw error(400, 'no such folder');
-	// 	const index = folder.children.findIndex((doc) => doc.childId.toString() === id);
-	// 	if (index < 0) throw error(400, 'doc not in folder');
-	// 	const _temp = [...folder.children];
-	// 	_temp[index].name = newName;
-	// 	console.log(_temp);
-	// 	await folders.updateOne(folderFilter, { $set: { children: _temp } });
-	// }
-
 	await documents.updateOne({ childId: new ObjectId(id) }, { $set: { name: newName } });
 };
 
@@ -214,4 +189,30 @@ export const getFolderDetails = async (db: Db, bucket: GridFSBucket, id: string 
 	}
 
 	return { totalSize: selfSize, totalFiles: selfFiles, totalFolders: selfFolders };
+};
+
+export const getPermissions = async (
+	session: string | undefined,
+	type: string,
+	childId: string,
+	docs?: Collection<IDoc>
+) => {
+	if (!session) return null;
+
+	if (!docs) {
+		const setup = await setupDocuments();
+		docs = setup.docs;
+	}
+
+	const doc = await docs.findOne({ childId: new ObjectId(childId), type });
+
+	if (doc?.user.toString() === session) return 'owner';
+
+	const _perm = doc?.permissions.find((perm) => perm.user.toString() === session);
+
+	if (doc?.public && _perm?.type !== 'edit') return 'view';
+
+	if (!_perm) return null;
+
+	return _perm.type;
 };

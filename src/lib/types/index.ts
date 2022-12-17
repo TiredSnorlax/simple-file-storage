@@ -2,9 +2,16 @@ import type { ObjectId } from 'mongodb';
 
 export type ID = string | ObjectId;
 
+export type Permission = {
+	user: ID;
+	type: 'owner' | 'edit' | 'view';
+};
+
 export interface IDoc {
 	_id?: ID;
 	user: ID;
+	permissions: Permission[];
+	public: boolean;
 	path: string;
 	type: string;
 	fileType: string;

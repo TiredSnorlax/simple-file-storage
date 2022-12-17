@@ -20,7 +20,7 @@
 		<div class="info">
 			<h2>{$user.username}'s folder</h2>
 		</div>
-		<DocsList bind:docs />
+		<DocsList bind:docs userPermission={'owner'} />
 	{/if}
 </div>
 

@@ -5,15 +5,11 @@ import { error } from '@sveltejs/kit';
 import { ObjectId } from 'mongodb';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ cookies, request }) => {
+export const POST: RequestHandler = async ({ request }) => {
 	const { db } = await setupDb();
-	let userId;
 
-	if (cookies.get('session')) userId = cookies.get('session');
-	else {
-		const temp = await request.json();
-		if (temp.userId) userId = temp.userId;
-	}
+	const temp = await request.json();
+	const userId = temp.userId;
 
 	const users = db.collection<IUser>('users');
 	const documents = db.collection<IDoc>('documents');
