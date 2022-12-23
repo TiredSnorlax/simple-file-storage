@@ -2,6 +2,10 @@
 	export let progress: number;
 	export let uploading: boolean;
 	export let uploadDone: boolean;
+	export let progressOfItems: {
+		current: number;
+		total: number;
+	};
 
 	const close = () => {
 		progress = 0;
@@ -15,7 +19,7 @@
 		<p>Upload successful <span class="material-icons-outlined"> done </span></p>
 		<button on:click={close}>Close</button>
 	{:else}
-		<p>Uploading:</p>
+		<p>Uploading ({progressOfItems.current} of {progressOfItems.total}) :</p>
 		<div class="progressBar">
 			<progress max="100" value={progress + ''} />
 			<p>{progress}%</p>

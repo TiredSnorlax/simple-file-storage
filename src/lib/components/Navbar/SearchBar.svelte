@@ -8,6 +8,7 @@
 	import FilterMenu from './FilterMenu.svelte';
 
 	let inputFocused = false;
+	let inputEle: HTMLInputElement;
 
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
@@ -19,19 +20,18 @@
 	let searchTerm: string;
 
 	const hasFocus = (e: Event) => {
-		const input = e.target as HTMLInputElement;
-		if (document.activeElement === input) inputFocused = true;
+		if (document.activeElement === inputEle) inputFocused = true;
 		else inputFocused = false;
 	};
 
 	const checkSearch = (e: Event) => {
 		const ele = e.target as HTMLInputElement;
 		clearTimeout(searchTimeout);
+		if (ele.value.length === 0 || !ele.value) return;
 		searchTimeout = setTimeout(() => searchFunction(ele.value), 1000);
 	};
 
 	const searchFunction = async (term: string) => {
-		if (term.length === 0) return;
 		console.log('search');
 		searchTerm = term;
 
@@ -56,7 +56,13 @@
 
 <div class="search" class:inputFocused>
 	<span class="material-icons-outlined"> search </span>
-	<input type="text" placeholder="Search drive" on:keyup={checkSearch} on:keydown={pressedEnter} />
+	<input
+		type="text"
+		placeholder="Search drive"
+		on:keyup={checkSearch}
+		on:keydown={pressedEnter}
+		bind:this={inputEle}
+	/>
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<span class="material-icons-outlined" on:click={() => (filterMenuOpen = !filterMenuOpen)}>
 		tune
@@ -102,6 +108,8 @@
 	.search {
 		width: 100%;
 		max-width: 400px;
+		flex: 1 1 auto;
+		min-width: 0;
 
 		background: rgb(240, 240, 240);
 		padding: 0.5rem;
@@ -130,7 +138,7 @@
 		border-radius: 2rem;
 
 		flex: 1 1 auto;
-		min-width: none;
+		min-width: 0;
 
 		font-size: 1rem;
 	}

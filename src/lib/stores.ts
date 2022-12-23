@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { IFolder, IFolderFilled, IUserFilled } from './types';
+import type { IFolderFilled, IUserFilled } from './types';
 
 export const path = writable<string | null>(null);
 

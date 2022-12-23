@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { domain } from '$lib/utils';
-	import axios from 'axios';
-	import { currentFolder, path, user } from '$lib/stores';
 	import { slide } from 'svelte/transition';
 	import NewFolderMenu from './NewFolderMenu.svelte';
 	import ProgressBar from './ProgressBar.svelte';
@@ -9,8 +6,7 @@
 	import NewFile from './NewFile.svelte';
 
 	export let docs: IDoc[];
-
-	let newFoldername = '';
+	export let parentDoc: IDoc | null;
 
 	let open = false;
 	let folderMenuOpen = false;
@@ -19,43 +15,31 @@
 	let uploading = false;
 	let progress = 0;
 	let uploadDone = false;
+	let progressOfItems = { current: 1, total: 1 };
 
-	const addFolder = async () => {
-		folderMenuOpen = false;
-		uploading = true;
-		// ensure that foldername does not container weird characters
-		if (newFoldername.length === 0 || !user) return;
-		await axios
-			.post(domain + 'api/folder', {
-				userId: $user?._id,
-				path: $path,
-				foldername: newFoldername,
-				folderId: $currentFolder._id
-			})
-			.then((res) => {
-				console.log(res.data);
-				docs = res.data;
-				progress = 100;
-				uploadDone = true;
-			})
-			.catch((err) => {
-				console.log(err);
-			});
+	const openMenu = (option: number) => {
+		if (option === 0) {
+			folderMenuOpen = true;
+			fileMenuOpen = false;
+		} else if (option === 1) {
+			folderMenuOpen = false;
+			fileMenuOpen = true;
+		}
 	};
 </script>
 
 {#if open}
 	<div class="addFileContainer">
 		{#if uploading}
-			<ProgressBar bind:progress bind:uploading bind:uploadDone />
+			<ProgressBar bind:progress bind:uploading bind:uploadDone {progressOfItems} />
 		{:else}
 			<div transition:slide class="revealed">
-				<h3>Current Folder: {$currentFolder.foldername}</h3>
-				<button class="field" on:click={() => (folderMenuOpen = true)}>
+				<h3>Current Folder: {parentDoc ? parentDoc.name : 'main'}</h3>
+				<button class="field" on:click={() => openMenu(0)}>
 					<span class="material-icons-outlined"> folder</span>
 					Add Folder</button
 				>
-				<button class="field" on:click={() => (fileMenuOpen = true)}>
+				<button class="field" on:click={() => openMenu(1)}>
 					<span class="material-icons-outlined"> file_upload</span>
 					Add File</button
 				>
@@ -66,12 +50,28 @@
 {/if}
 <button on:click={() => (open = true)} class="openBtn">
 	<span class="material-icons-outlined"> add </span>
-	Add</button
->
+</button>
 {#if fileMenuOpen}
-	<NewFile bind:fileMenuOpen bind:progress bind:uploadDone bind:uploading bind:docs />
+	<NewFile
+		bind:fileMenuOpen
+		bind:progress
+		bind:uploadDone
+		bind:uploading
+		bind:docs
+		bind:progressOfItems
+		{parentDoc}
+	/>
 {/if}
-<NewFolderMenu {folderMenuOpen} bind:newFoldername {addFolder} />
+{#if folderMenuOpen}
+	<NewFolderMenu
+		bind:folderMenuOpen
+		bind:progress
+		bind:uploadDone
+		bind:uploading
+		bind:docs
+		{parentDoc}
+	/>
+{/if}
 
 <style>
 	button {
@@ -100,7 +100,7 @@
 
 	.openBtn {
 		--self-bg-color: rgb(110, 110, 255);
-		padding: 0.4rem 1.5rem;
+		padding: 0.5rem;
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -108,7 +108,6 @@
 
 		background: var(--self-bg-color);
 		border-radius: 5rem;
-		color: white;
 		font-size: 1rem;
 		transition: 0.3s;
 		cursor: pointer;
@@ -119,8 +118,7 @@
 	.openBtn span {
 		padding: 0.2rem;
 		border-radius: 50%;
-		background: white;
-		color: var(--self-bg-color);
+		color: white;
 		font-size: 32px;
 		transition: 0.3s;
 	}
@@ -157,5 +155,16 @@
 
 	.closeBtn:hover {
 		color: red;
+	}
+
+	@media (max-width: 450px) {
+		.addFileContainer {
+			left: 0;
+			right: 0;
+			bottom: 0;
+			width: 100%;
+			border-radius: 0;
+			box-shadow: 0 -1px 3px 0 grey;
+		}
 	}
 </style>

@@ -17,7 +17,7 @@
 		const offset = type === 'file' ? -1 : -2;
 		let id = pathArray.at(offset)?._id;
 		if (!id) return domain + 'me';
-		return domain + 'view/folder/' + id;
+		return domain + 'folder/' + id;
 	};
 
 	const getPath = async (path: string) => {
@@ -45,11 +45,11 @@
 	>
 	<div class="pathDisplay">
 		{#each pathArray as path}
-			<p>/</p>
+			<p class="slash">/</p>
 			<p><a href="/view/folder/{path._id}">{path.foldername}</a></p>
 		{/each}
 		{#if type === 'file'}
-			<p>/</p>
+			<p class="slash">/</p>
 			<p>{current}</p>
 		{/if}
 	</div>
@@ -59,6 +59,17 @@
 	a {
 		text-decoration: none;
 		color: initial;
+	}
+
+	a,
+	p {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	p.slash {
+		flex-shrink: 0;
 	}
 
 	a span {
@@ -76,6 +87,7 @@
 
 	.pathContainer {
 		flex: 1 1 auto;
+		min-width: 0;
 		display: flex;
 		justify-content: flex-start;
 		align-items: center;
@@ -83,6 +95,8 @@
 	}
 
 	.pathDisplay {
+		flex: 1 1 auto;
+		min-width: 0;
 		display: flex;
 		justify-content: flex-start;
 		align-items: center;
@@ -94,5 +108,14 @@
 	.pathDisplay p:last-child {
 		text-decoration: underline;
 		text-decoration-thickness: 2px;
+	}
+
+	@media (max-width: 600px) {
+		.pathDisplay {
+			font-size: 14px;
+		}
+		p {
+			max-width: 120px;
+		}
 	}
 </style>

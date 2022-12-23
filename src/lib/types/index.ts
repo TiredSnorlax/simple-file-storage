@@ -7,11 +7,16 @@ export type Permission = {
 	type: 'owner' | 'edit' | 'view';
 };
 
+export type UserPermission = {
+	user: IUser;
+	type: 'owner' | 'edit' | 'view';
+};
+
 export interface IDoc {
 	_id?: ID;
 	user: ID;
 	permissions: Permission[];
-	public: boolean;
+	isPublic: boolean;
 	path: string;
 	type: string;
 	fileType: string;
@@ -44,6 +49,8 @@ export interface IUser {
 	_id?: ID;
 	username: string;
 	password: string;
+	email: string;
+	picture?: ID;
 	mainFolder: ID[];
 }
 
@@ -51,5 +58,7 @@ export interface IUserFilled {
 	_id: ID;
 	username: string;
 	password: string;
+	email: string;
+	picture?: ID;
 	mainFolder: IDoc[];
 }

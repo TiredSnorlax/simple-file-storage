@@ -18,7 +18,7 @@
 			})
 			.then((res) => {
 				console.log(res.data);
-				docs = res.data.folder;
+				docs = [...res.data.folder];
 				result = 'success';
 			})
 			.catch((err) => {

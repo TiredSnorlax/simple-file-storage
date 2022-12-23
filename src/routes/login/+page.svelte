@@ -4,18 +4,16 @@
 	import { errorMessage, message, user } from '$lib/stores';
 	import { domain } from '$lib/utils';
 	import axios from 'axios';
+	import { onMount } from 'svelte';
 
-	let username = '';
+	let identity = '';
 	let password = '';
 
 	const login = async () => {
-		console.log('username: ' + username);
-		console.log('password: ' + password);
-
-		if (!username || !password) return;
+		if (!identity || !password) return;
 
 		await axios
-			.post(domain + 'api/login', { username, password })
+			.post(domain + 'api/login', { identity, password })
 			.then((res) => {
 				message.set(res.data.message);
 				console.log(res.data);
@@ -27,12 +25,19 @@
 				errorMessage.set(err.response.data.message);
 			});
 	};
+
+	onMount(() => {
+		const cookies = document.cookie.split(';');
+		for (const cookie of cookies) {
+			if (cookie.substring(0, 7) === 'session') goto('./me');
+		}
+	});
 </script>
 
 <div class="page">
 	<div class="menu">
 		<h1>Welcome back!</h1>
-		<InputField bind:value={username} label="Username" icon="person" />
+		<InputField bind:value={identity} label="Username/Email" icon="person" />
 		<InputField bind:value={password} label="Password" icon="password" type="password" />
 		<p class="signup">No account? Sign up <a href="./signup">here</a></p>
 		<button on:click={login}>Login</button>

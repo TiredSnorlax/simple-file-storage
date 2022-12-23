@@ -37,18 +37,20 @@
    - Use recursion?
 5. Fix renaming folder [x]
    - Change pathing to objectid instead of name [x]
-6. Add preview images (https://www.npmjs.com/package/sharp) [ ]
-7. Implement permissions + public/private. [ ]
+6. Add preview images (https://www.npmjs.com/package/sharp) [x]
+7. Implement permissions + public/private. [x]
    - Info stored in Document
+   - Recursion to update all child documents
 8. Implement searchbar [x]
 9. Add filters to searchbar [x]
    - filter by fileType (pdf, images, video)
 10. Fix file page [x]
 11. Implement login and signup [x]
-12. Make profile page [ ]
-13. Implement zooming in for files [ ]
-14. Fix file adding UI
-15. Add email to User
+12. Make profile page [x]
+13. Implement zooming in for files [ ] (may not need)
+14. Fix file adding UI [x]
+15. Add email to User [x]
+16. Add userId checks (authentication) to API routes
 
 ## Fonts
 

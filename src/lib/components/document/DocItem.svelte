@@ -2,6 +2,7 @@
 	import type { IDoc } from '$lib/types';
 	import { domain } from '$lib/utils';
 	import { Buffer } from 'buffer';
+	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 
 	import DocDetailsMenu from './DocDetailsMenu.svelte';
@@ -17,13 +18,20 @@
 	let renameMenuOpen = false;
 	let detailsMenuOpen = false;
 
+	let hasPreview = true;
+
 	let canvasEle: HTMLCanvasElement;
 
-	const loadPreview = async (format: number) => {
+	const loadPreview = async (format: number, doc: IDoc, canvasEle: HTMLCanvasElement) => {
 		if (!doc || doc.type === 'folder') return;
-		if (format !== 0) return;
+		if (format !== 0 || !canvasEle) return;
 		const chunks = [];
 		const response = await fetch(domain + 'api/file/' + doc.childId + '/preview');
+		if (response.status === 400) {
+			canvasEle.style.display = 'none';
+			hasPreview = false;
+			return;
+		}
 		const reader = response.body?.getReader();
 		while (true) {
 			const { value, done } = await reader!.read();
@@ -35,17 +43,27 @@
 
 		if (buffer.length === 0) return;
 
-		canvasEle
-			.getContext('2d')
-			?.putImageData(new ImageData(new Uint8ClampedArray(buffer), 300), 0, 0);
+		const ctx = canvasEle.getContext('2d');
+		ctx?.clearRect(0, 0, canvasEle.width, canvasEle.height);
+		const imgData = new ImageData(new Uint8ClampedArray(buffer), 250);
+		canvasEle.width = imgData.width;
+		canvasEle.height = imgData.height;
+		ctx?.putImageData(imgData, 0, 0);
 	};
 
-	$: loadPreview(format);
+	$: loadPreview(format, doc, canvasEle);
+
+	// onMount(() => {
+	// 	loadPreview(format, doc);
+	// });
 </script>
 
 <div class="item" class:listItem={format === 1}>
 	{#if format === 0 && doc.fileType !== 'folder'}
-		<canvas bind:this={canvasEle} />
+		<canvas width="250" bind:this={canvasEle} />
+		{#if !hasPreview}
+			<img src="/no-preview.png" alt="" />
+		{/if}
 	{/if}
 	<div>
 		<a href={`${domain}${doc.type}/${doc.childId}`} class="info">
@@ -81,9 +99,11 @@
 		min-width: 0;
 	}
 
+	img,
 	canvas {
 		width: 100%;
-		object-fit: contain;
+		height: 100%;
+		object-fit: cover;
 
 		border-top-left-radius: 0.5rem;
 		border-top-right-radius: 0.5rem;
@@ -102,6 +122,7 @@
 		border-radius: 0.5rem;
 
 		width: 100%;
+		max-height: 250px;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;

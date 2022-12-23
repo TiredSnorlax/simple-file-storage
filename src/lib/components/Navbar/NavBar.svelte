@@ -1,13 +1,12 @@
 <script>
+	import ProfileMenu from './ProfileMenu.svelte';
 	import SearchBar from './SearchBar.svelte';
 </script>
 
 <div class="navbar">
 	<a href="/me" class="logo"><span class="material-icons-outlined"> wb_cloudy </span></a>
 	<SearchBar />
-	<div class="profile">
-		<span class="material-icons-outlined"> person </span>
-	</div>
+	<ProfileMenu />
 </div>
 
 <style>
@@ -26,6 +25,8 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: 1rem;
+
+		position: relative;
 	}
 
 	.logo span {

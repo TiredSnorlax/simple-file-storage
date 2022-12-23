@@ -105,8 +105,10 @@
 		justify-content: center;
 		align-items: center;
 		flex-direction: column;
+		padding: 0.5rem;
 
 		border-radius: 5px;
+		cursor: pointer;
 
 		aspect-ratio: 1;
 	}
@@ -134,6 +136,19 @@
 		.filtersContainer {
 			left: auto;
 			right: 2rem;
+		}
+	}
+
+	@media (max-width: 500px) {
+		.filtersContainer {
+			position: fixed;
+			top: 4.5rem;
+			left: 1rem;
+			width: calc(100% - 2rem);
+			grid-template-columns: repeat(6, 1fr);
+			grid-template-rows: 1fr;
+			padding: 0.5rem;
+			gap: 5px;
 		}
 	}
 </style>

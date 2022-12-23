@@ -28,8 +28,6 @@ export const load: PageServerLoad = async ({ cookies, params }) => {
 			method: 'get'
 		});
 
-		console.log(folderRes);
-
 		const folder = (await folderRes.json()) as IFolderFilled;
 
 		const data = { userPermission, doc, folder };

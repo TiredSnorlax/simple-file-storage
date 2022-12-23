@@ -1,5 +1,4 @@
-import { updated } from '$app/stores';
-import type { ID, IDoc, IFolder, IUser } from '$lib/types';
+import type { ID, IDoc, IFolder, IUser, Permission, UserPermission } from '$lib/types';
 import { error } from '@sveltejs/kit';
 import { Db, GridFSBucket, ObjectId, type Collection, type WithId } from 'mongodb';
 import { setupDocuments, setupUsers } from './db';
@@ -16,7 +15,8 @@ export const createNewDoc = async (
 	type: string,
 	name: string,
 	childId: string | ObjectId,
-	path: string
+	path: string,
+	parentPermissions: Permission[] | null
 ) => {
 	let fileType;
 
@@ -25,10 +25,11 @@ export const createNewDoc = async (
 
 	// TODO add permissions from parent folder if any
 	if (!fileType) return;
+
 	const temp: IDoc = {
-		user: userId,
+		user: new ObjectId(userId),
 		permissions: [],
-		public: false,
+		isPublic: false,
 		type,
 		fileType,
 		path,
@@ -37,6 +38,13 @@ export const createNewDoc = async (
 		dateAdded: new Date(),
 		lastUpdated: new Date()
 	};
+
+	console.log(parentPermissions);
+	if (parentPermissions)
+		temp.permissions = parentPermissions.map((perm) => ({
+			user: new ObjectId(perm.user),
+			type: perm.type
+		}));
 
 	const results = await documents.insertOne(temp);
 
@@ -56,11 +64,8 @@ export const deleteDoc = async (
 
 	let updatedFolder = [];
 
-	console.log(id);
 	// * Delete document in collection
 	const deletedDoc = await documents.findOneAndDelete({ childId: new ObjectId(id) });
-	console.log(deletedDoc);
-
 	// * Delete document in folder
 	if (path === '/') {
 		const { users } = await setupUsers();
@@ -69,35 +74,33 @@ export const deleteDoc = async (
 			{ $pull: { mainFolder: new ObjectId(deletedDoc.value?._id) } },
 			{ returnDocument: 'after' }
 		);
-		console.log(re.value);
 		updatedFolder = re.value?.mainFolder ?? [];
 	} else {
 		const re = await folders.findOneAndUpdate(
-			{ children: new ObjectId(id) },
+			{ children: new ObjectId(deletedDoc.value?._id) },
 			{ $pull: { children: new ObjectId(deletedDoc.value?._id) } },
 			{ returnDocument: 'after' }
 		);
-		console.log(re.value);
 		updatedFolder = re.value?.children ?? [];
 	}
 
-	updatedFolder = await getDocsFromId(updatedFolder, documents);
-	return updatedFolder;
+	const re = await getDocsFromId(updatedFolder, documents);
+	console.log(updatedFolder);
+	return re;
 };
 
 export const renameDoc = async (
 	documents: Collection<IDoc>,
-	folders: Collection<IFolder>,
 	id: string | ObjectId,
-	userId: string | ObjectId,
-	path: string,
 	newName: string
 ) => {
 	await documents.updateOne({ childId: new ObjectId(id) }, { $set: { name: newName } });
 };
 
 const deletePreview = async (bucket: GridFSBucket, originalId: string | ObjectId) => {
-	const preview = await bucket.find({ 'metadata.original': new ObjectId(originalId) }).toArray();
+	const cursor = bucket.find({ 'metadata.original': new ObjectId(originalId) });
+	if (!cursor) return;
+	const preview = await cursor.toArray();
 	if (preview) {
 		await bucket.delete(preview[0]._id);
 	}
@@ -210,9 +213,43 @@ export const getPermissions = async (
 
 	const _perm = doc?.permissions.find((perm) => perm.user.toString() === session);
 
-	if (doc?.public && _perm?.type !== 'edit') return 'view';
+	if (doc?.isPublic && _perm?.type !== 'edit') return 'view';
 
 	if (!_perm) return null;
 
 	return _perm.type;
+};
+
+export const setPermissions = async (
+	docs: Collection<IDoc>,
+	folders: Collection<IFolder>,
+	isPublic: boolean,
+	updatedUserPermissions: UserPermission[],
+	docId: ID
+) => {
+	const userPermissions = updatedUserPermissions.map((perm: UserPermission) => {
+		return { user: new ObjectId(perm.user._id), type: perm.type };
+	});
+
+	const res = await docs.findOneAndUpdate(
+		{ _id: new ObjectId(docId) },
+		{ $set: { permissions: userPermissions, isPublic } },
+		{ returnDocument: 'after' }
+	);
+
+	if (res.value?.type === 'folder') {
+		const updated = res.value;
+		const folder = await folders.findOne({ _id: new ObjectId(updated.childId) });
+		// if (folder) {
+		// 	const childrenIds = folder?.children.map((id) => new ObjectId(id));
+		// 	docs.updateMany({ _id: { $in: childrenIds } }, {$set: {permissions: userPermissions}});
+		// }
+		if (folder) {
+			for await (const id of folder.children) {
+				await setPermissions(docs, folders, isPublic, updatedUserPermissions, id);
+			}
+		}
+	}
+
+	return res.value;
 };

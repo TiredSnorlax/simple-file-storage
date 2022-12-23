@@ -5,6 +5,7 @@
 	import FolderSlideshow from './FolderSlideshow.svelte';
 	import DeleteMenu from './DeleteMenu.svelte';
 
+	export let parentDoc: IDoc | null = null;
 	export let docs: IDoc[];
 	export let userPermission: string;
 
@@ -72,7 +73,7 @@
 	</div>
 {/if}
 {#if userPermission === 'owner' || userPermission === 'edit'}
-	<AddFile bind:docs />
+	<AddFile bind:docs {parentDoc} />
 	<DeleteMenu bind:toDelete bind:docs />
 {/if}
 <FolderSlideshow {files} bind:slideshowOpen />
@@ -123,6 +124,12 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+	}
+
+	.noFileMessage p {
+		color: grey;
+		font-size: 1.2rem;
+		user-select: none;
 	}
 
 	.slideshowBtn {

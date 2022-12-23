@@ -32,9 +32,11 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/pdfjs-dist": "^2.10.378",
 		"axios": "^1.2.1",
 		"buffer": "^6.0.3",
 		"mongodb": "^4.12.1",
+		"pdfjs-dist": "^3.1.81",
 		"stream": "^0.0.2"
 	}
 }

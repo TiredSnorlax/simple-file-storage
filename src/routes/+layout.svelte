@@ -7,27 +7,22 @@
 	import { page } from '$app/stores';
 	import { fly } from 'svelte/transition';
 
-	const userId = '6380b4ab7b233f99f3a405a3';
+	const excluded = ['/login', '/logout', '/signup', '/'];
 
-	const excluded = ['/login', '/logout', '/signup'];
-
-	$: pageId = $page.route.id;
+	$: route = $page.route;
 
 	const getFiles = async () => {
 		console.log('getting user');
-		await axios.post(domain + 'api/me', { userId }).then((res) => {
+		await axios.post(domain + 'api/me').then((res) => {
 			user.set(res.data);
 		});
 	};
 
 	const checkShow = (_id: string) => {
-		if (!pageId) return false;
-		return !excluded.includes(pageId);
+		if (!route.id) return false;
+		if (!excluded.includes(route.id!) && typeof document !== 'undefined') getFiles();
+		return !excluded.includes(route.id);
 	};
-
-	onMount(async () => {
-		if (pageId && !excluded.includes(pageId)) await getFiles();
-	});
 
 	$: show = checkShow($page.params.id);
 </script>
@@ -42,11 +37,13 @@
 	{#if $errorMessage}
 		<button class="errorMsg" transition:fly={{ y: -30 }} on:click={() => errorMessage.set(null)}>
 			{$errorMessage}
+			<span class="material-icons-outlined"> clear </span>
 		</button>
 	{/if}
 	{#if $message}
 		<button class="message" transition:fly={{ y: -30 }} on:click={() => message.set(null)}>
 			{$message}
+			<span class="material-icons-outlined"> clear </span>
 		</button>
 	{/if}
 </div>
@@ -63,6 +60,13 @@
 
 		cursor: pointer;
 	}
+
+	span {
+		display: flex;
+		font-size: 18px;
+		color: rgba(255, 255, 255, 0.7);
+	}
+
 	.container {
 		width: 100vw;
 		height: 100vh;
@@ -80,13 +84,18 @@
 
 	.errorMsg {
 		position: fixed;
-		top: 1rem;
+		top: 2rem;
 		left: 0;
 		right: 0;
 		margin: 0 auto;
-		padding: 0.5rem 1rem;
+		padding: 1rem 1.5rem;
 		background: red;
 		border-radius: 0.5rem;
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
 
 		font-size: 1.1rem;
 
@@ -95,13 +104,18 @@
 
 	.message {
 		position: fixed;
-		top: 1rem;
+		top: 2rem;
 		left: 0;
 		right: 0;
 		margin: 0 auto;
-		padding: 0.5rem 1rem;
-		background: green;
+		padding: 1rem 1.5rem;
+		background: rgb(0, 189, 0);
 		border-radius: 0.5rem;
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 0.5rem;
 
 		font-size: 1.1rem;
 
@@ -109,10 +123,10 @@
 	}
 
 	.errorMsg:hover {
-		background: rgb(255, 160, 160);
+		background: rgb(255, 100, 100);
 	}
 
 	.message:hover {
-		background: rgb(160, 255, 160);
+		background: rgb(60, 200, 60);
 	}
 </style>

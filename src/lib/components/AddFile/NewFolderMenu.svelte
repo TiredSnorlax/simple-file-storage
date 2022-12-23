@@ -1,23 +1,56 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
+	import { domain } from '$lib/utils';
+	import axios from 'axios';
+	import { currentFolder, path, user } from '$lib/stores';
+	import type { IDoc } from '$lib/types';
 
-	export let newFoldername: string;
-	export let addFolder: () => void;
 	export let folderMenuOpen: boolean;
+	export let parentDoc: IDoc | null;
+	export let docs: IDoc[];
+
+	export let progress: number;
+	export let uploadDone: boolean;
+	export let uploading: boolean;
+
+	let newFoldername = '';
+
+	const addFolder = async () => {
+		folderMenuOpen = false;
+		uploading = true;
+		// ensure that foldername does not container weird characters
+		if (newFoldername.length === 0 || !user) return;
+		await axios
+			.post(domain + 'api/folder', {
+				userId: $user?._id,
+				path: $path,
+				foldername: newFoldername,
+				folderId: parentDoc ? parentDoc.childId : null,
+				parentPermissions: parentDoc ? parentDoc.permissions : null
+			})
+			.then((res) => {
+				console.log(res.data);
+				docs = res.data;
+				progress = 100;
+				uploadDone = true;
+				folderMenuOpen = false;
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	};
 </script>
 
-{#if folderMenuOpen}
-	<div class="bg" transition:fade>
-		<div class="menu" transition:slide>
-			<h2>New Folder</h2>
-			<input type="text" bind:value={newFoldername} />
-			<div class="btnContainer">
-				<button>Cancel</button>
-				<button on:click={addFolder}>Create</button>
-			</div>
+<div class="bg" transition:fade>
+	<div class="menu" transition:slide>
+		<h2>New Folder</h2>
+		<input type="text" bind:value={newFoldername} />
+		<div class="btnContainer">
+			<button on:click={() => (folderMenuOpen = false)}>Cancel</button>
+			<button on:click={addFolder}>Create</button>
 		</div>
 	</div>
-{/if}
+</div>
 
 <style>
 	button {
